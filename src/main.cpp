@@ -12,8 +12,8 @@ ez::Drive chassis(
     {-4, -5, -6},  // Right Chassis Ports (negative port will reverse it!)
 
     7,      // IMU Port
-    4.125,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
-    343);   // Wheel RPM
+    2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
+    450);   // Wheel RPM
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -26,8 +26,8 @@ void initialize() {
   pros::delay(500);  // Stop the user from doing anything while legacy ports configure
 
   // Configure your chassis controls
-  chassis.opcontrol_curve_buttons_toggle(true);  // Enables modifying the controller curve with buttons on the joysticks
-  chassis.opcontrol_drive_activebrake_set(2.0);    // Sets the active brake kP. We recommend ~2.  0 will disable.
+  chassis.opcontrol_curve_buttons_toggle(false);  // Enables modifying the controller curve with buttons on the joysticks
+  chassis.opcontrol_drive_activebrake_set(0);    // Sets the active brake kP. We recommend ~2.  0 will disable.
   chassis.opcontrol_curve_default_set(0, 0);     // Defaults for curve. If using tank, only the first parameter is used. (Comment this line out if you have an SD card!)
 
   // Set the drive to your own constants from autons.cpp!
@@ -116,6 +116,9 @@ void opcontrol() {
 
   chassis.drive_brake_set(driver_preference_brake);
 
+  // Variables
+  bool clamping = false; // tracks the state of the mobile goal clamp
+
   while (true) {
     // PID Tuner
     // After you find values that you're happy with, you'll have to set them in auton.cpp
@@ -140,9 +143,44 @@ void opcontrol() {
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade
   
 
-    // . . .
-    // Put more user control code here!
-    // . . .
+    // Other subsystems
+
+    // INTAKE
+    if (master.get_digital(DIGITAL_R2)) {
+			intake.move(100); // intake
+		}
+		else if (master.get_digital(DIGITAL_L2)){
+			intake.move(-100); // outtake
+		}
+		else {
+			intake.move(0);
+		}
+    
+
+    // MOBILE GOAL CLAMP  
+    if (master.get_digital(DIGITAL_R1)) {
+			//switch the state of mogo clamp
+			clamping = !clamping;
+		  MogoClamp.set_value(clamping);
+		}
+
+    // ARM
+    if (master.get_digital(DIGITAL_L1)) { // move the arm forward when the button is pressed
+			if (arm.get_position() < 180) {
+				arm.move_velocity(100);
+			}
+			else {
+				arm.move_velocity(0);
+			}
+			
+		}
+		else if (arm.get_position() > 0) {
+			arm.move_velocity(-100);
+		}
+		else {
+			arm.move_velocity(0);
+		}
+
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
   }
