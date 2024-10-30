@@ -47,6 +47,10 @@ void initialize() {
       Auton("Motion Chaining\n\nDrive forward, turn, and come back, but blend everything together :D", motion_chaining),
       Auton("Combine all 3 movements", combining_movements),
       Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
+      Auton("AWP safe left side", safeAWPLeft),
+      Auton("AWP risky right side", riskyAWPRight),
+      Auton("Skills Auto", skillsAuto),
+
   });
 
   // Initialize chassis and auton selector
@@ -111,6 +115,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  
   // This is preference to what you like to drive on
   pros::motor_brake_mode_e_t driver_preference_brake = MOTOR_BRAKE_COAST;
 

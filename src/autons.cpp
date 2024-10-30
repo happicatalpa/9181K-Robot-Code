@@ -5,10 +5,12 @@
 // https://ez-robotics.github.io/EZ-Template/
 /////
 
+// Default speeds
 // These are out of 127
 const int DRIVE_SPEED = 110;
 const int TURN_SPEED = 90;
 const int SWING_SPEED = 90;
+const int INTAKE_SPEED = 110;
 
 ///
 // Constants
@@ -218,6 +220,86 @@ void interfered_example() {
   chassis.pid_wait();
 }
 
-// . . .
-// Make your own autonomous functions here!
-// . . .
+
+/* Autonomous Functions */ 
+
+void safeAWPLeft() { // right side for now
+  // ~~ Move back and score preload onto the alliance stake ~~
+  //chassis.pid_drive_set(xx_in, speed);
+  //chassis.pid_wait();
+  //arm.move(127);
+
+  // ~~ Turn and move backwards towards the nearest mobile goal ~~
+  //chassis.pid_turn_relative_set(xx_deg, speed);
+  //chassis.pid_wait();
+  //chassis.pid_drive_set(-xx_in, speed);
+  //chassis.pid_wait();
+
+  // ~~ Clamp onto the goal ~~
+  //MogoClamp.set_value(true);
+
+  // ~~ Turn and intake the ring on the right ~~
+  //chassis.pid_turn_relative_set(xx_deg, speed);
+  //chassis.pid_wait();
+  //chassis.pid_drive_set(xx_in, speed);
+  //chassis.pid_wait_until(xx_in)
+  //intake.move(120);
+  //chassis.pid_wait();
+  //intake.move(0);
+
+  // ~~ Turn and intake rings in the corner ~~
+  //chassis.pid_turn_relative_set(xx_deg, speed);
+  //chassis.pid_wait();
+  //chassis.pid_drive_set(xx_in, speed)
+  //chassis.pid_wait_until(xx_in);
+  //intake.move(120);
+  //chassis.pid_wait();
+  //pros::delay(2000);
+
+  // ~~ Go to the corner of the ladder (drop the mobile goal halfway) ~~
+  //chassis.pid_turn_relative_set(xx_deg, speed);
+  //chassis.pid_wait();
+  //chassis.pid_drive_set(xx_in, speed);
+  //chassis.pid_wait_until(xx_in);
+  //MogoClamp.set_value(false);
+  //chassis.pid_wait();
+
+}
+
+void riskyAWPRight() { // AWP on the right side, rushes center mogo
+  // ~~ Move backwards as fast as possible to get the center mobile goal
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(-xx_in, speed);
+  //chassis.pid_wait();
+
+  // ~~ get the center goal ~~
+  //MogoClamp.set_value(true);
+  
+  // ~~ get the nearest ring ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait();
+  //intake.move(INTAKE_SPEED);
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+
+  // ~~ turn and drop mogo to the back ~~ //
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait();
+  //intake.move(0);
+  //MogoClamp.set_value(false);
+
+  // ~~ 180 then back into the second mogo, grab it ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //
+
+
+
+
+}
+
+void skillsAuto() {
+
+}
