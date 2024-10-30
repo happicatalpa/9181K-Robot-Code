@@ -11,6 +11,7 @@ const int DRIVE_SPEED = 110;
 const int TURN_SPEED = 90;
 const int SWING_SPEED = 90;
 const int INTAKE_SPEED = 110;
+const int ARM_SPEED = 110;
 
 ///
 // Constants
@@ -293,13 +294,152 @@ void riskyAWPRight() { // AWP on the right side, rushes center mogo
   // ~~ 180 then back into the second mogo, grab it ~~
   //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
   //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
-  //
+  //chassis.pid_wait();
+  //MogoClamp.set_value(false);
 
+  // ~~ Grab the next ring ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_until(xx_in);
+  //intake.move(120);
+  //chassis.pid_wait();
 
-
+  // ~~ Go touch the ladder (drop the mogo on the way) ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //intake.move(0);
+  //chassis.pid_wait();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //MogoClamp.set_value(false);
+  //chassis.pid_wait();
 
 }
 
 void skillsAuto() {
+  // ~~ Score Preload onto alliance stake ~~
+  //arm.move(ARM_SPEED);
+  //pros::delay(1000);
+
+  // ~~ get the left mogo ~~
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //MogoClamp.set_value(true);
+
+  // ~~ collect 6 rings on the left ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait();
+  //intake.move(INTAKE-SPEED);
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 1st ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 2nd ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 3rd ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 4, 5th ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_quick_chain();
+  // 6th ring done
+  //intake.m0ve(0);
+
+  // ~~ put 1st mogo into corner ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //MogoClamp.set_value(false);
+  //pros::delay(20);
+
+  // ~~ get second mogo ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //chassis.pid_wait();
+  //MogoClamp.set_value(true);
+
+  // ~~ collect 6 rings on the right ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait();
+  //intake.move(INTAKE-SPEED);
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 1st ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 2nd ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 3rd ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  // 4, 5th ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_quick_chain();
+  // 6th ring done
+  //intake.move(0);
+
+  // ~~ put 2nd mogo into corner ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //MogoClamp.set_value(false);
+  //pros::delay(20);
+
+  // ~~ Store two rings ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_until(xx_in);
+  //intake.move(INTAKE-SPEED);
+  //pros::delay(xx):
+  //intake.move(0);
+  // 1st ring done
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(xx_in, DRIVE_SPEED);
+  //chassis.pid_wait_until(xx_in);
+  //intake.move(INTAKE-SPEED);
+  //pros::delay(xx):
+  //intake.move(0);
+  // 2nd ring done
+  //chassis.pid_wait();
+
+  // ~~ Get 3rd mogo ~~
+  //chassis.pid_turn_relative_set(xx_deg, TURN_SPEED);
+  //chassis.pid_wait_quick_chain();
+  //chassis.pid_drive_set(-xx_in, DRIVE_SPEED);
+  //chassis.pid_wait();
+  //MogoClamp.set_value(true);
+  
+  // ~~ get the last 4 rings ~~
+  // too tired :(
+
+
 
 }
+
