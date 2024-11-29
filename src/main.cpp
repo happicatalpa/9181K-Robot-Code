@@ -8,10 +8,10 @@
 // Chassis constructor
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {8, 2, 3},     // Left Chassis Ports (negative port will reverse it!)
-    {-4, -5, -6},  // Right Chassis Ports (negative port will reverse it!)
+    {-8, -16, -9},     // Left Chassis Ports (negative port will reverse it!)
+    {5, 11, 20},  // Right Chassis Ports (negative port will reverse it!) back to front
 
-    7,      // IMU Port
+    19,      // IMU Port
     2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     450);   // Wheel RPM
 
@@ -39,6 +39,10 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.autons_add({
+      Auton("Right side match auto.", SeaquamAutoRight),
+      Auton("Left side mathc auto.", SeaquamAutoRight),
+      Auton("trial skills", trial_skills_auto),
+      Auton("Drive forward.", drive_forward),
       Auton("Example Drive\n\nDrive forward and come back.", drive_example),
       Auton("Example Turn\n\nTurn 3 times.", turn_example),
       Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -57,6 +61,11 @@ void initialize() {
   chassis.initialize();
   ez::as::initialize();
   master.rumble(".");
+
+  // Reset motor encoder position to zero for the wall stake arm
+  arm.tare_position();
+  arm.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
+
 }
 
 /**
@@ -78,7 +87,8 @@ void disabled() {
  * starts.
  */
 void competition_initialize() {
-  // . . .
+ 
+
 }
 
 /**
@@ -115,14 +125,16 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  // Start Subsystem Threads
+  pros::Task armControlTask(armControl); 
+  pros::Task mogoClampControlTask(clampControl);
+  pros::Task intakeControlTask(intakeControl);
+  pros::Task scoreSensingTask (scoreSensing);
+
   
   // This is preference to what you like to drive on
   pros::motor_brake_mode_e_t driver_preference_brake = MOTOR_BRAKE_COAST;
-
   chassis.drive_brake_set(driver_preference_brake);
-
-  // Variables
-  bool clamping = false; // tracks the state of the mobile goal clamp
 
   while (true) {
     // PID Tuner
@@ -143,50 +155,137 @@ void opcontrol() {
 
       chassis.pid_tuner_iterate();  // Allow PID Tuner to iterate
     }
-
   
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade
-  
+   
+    
+    pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
+  }
+}
 
-    // Other subsystems
+void armControl() {
+  // Variables
+  double targetAngle = 170; // How much the actual arm should turn
+  double gearRatio = 5;
 
-    // INTAKE
-    if (master.get_digital(DIGITAL_R2)) {
-			intake.move(100); // intake
-		}
-		else if (master.get_digital(DIGITAL_L2)){
-			intake.move(-100); // outtake
-		}
-		else {
-			intake.move(0);
-		}
+  double MAX_ANGLE = targetAngle * gearRatio;
+
+  while (true) {
+    double currentPosition = arm.get_position();
+
+    // Driver Control 
+    if (master.get_digital(DIGITAL_L1)) { // move the arm forward when the button is pressed
+      if (currentPosition < MAX_ANGLE) {
+        arm.move_absolute(MAX_ANGLE, 60*(MAX_ANGLE-currentPosition)); // Slow down the arm as it approaches the target angle
+        intake.move(100); 
+      }
+      else {
+        arm.move_velocity(0);
+      }
+    }
+    else if ((master.get_digital(DIGITAL_B))) {
+      if (currentPosition != 0) {
+        arm.move_absolute(0, -40);
+      }
+    }
+    else {
+      arm.move_velocity(0);
+    }
+
+    pros::delay(50);
+  }
+}
+
+void clampControl() {
+  // Variables
+  bool autoClamp = false; // toggle the activation of automatic clamping
+  const double CLAMP_RANGE = 8; // Distance of sensor from mogo before clamping, in cm
+
+  //Control
+  while (true) {
+    if (master.get_digital_new_press(DIGITAL_R1)) {
+        //switch the state of mogo clamp
+        MogoClamp.toggle();
+      }
+    else if (autoClamp && !MogoClamp.is_extended()) {
+      if (clampSensor.get_value() < CLAMP_RANGE) {
+        MogoClamp.extend();
+      }
+    }
+
+    if (master.get_digital(DIGITAL_X) && master.get_digital(DIGITAL_Y)) {
+      autoClamp = !autoClamp;
+    }
     
 
-    // MOBILE GOAL CLAMP  
-    if (master.get_digital(DIGITAL_R1)) {
-			//switch the state of mogo clamp
-			clamping = !clamping;
-		  MogoClamp.set_value(clamping);
-		}
+    pros::delay(50);
+  }
 
-    // ARM
-    if (master.get_digital(DIGITAL_L1)) { // move the arm forward when the button is pressed
-			if (arm.get_position() < 180) {
-				arm.move_velocity(100);
-			}
-			else {
-				arm.move_velocity(0);
-			}
-			
-		}
-		else if (arm.get_position() > 0) {
-			arm.move_velocity(-100);
-		}
-		else {
-			arm.move_velocity(0);
-		}
+  void intakeControl() {
+    
+  }
+}
 
+void intakeControl () {
+  const int BLUE = 190; // colour of blue ring
+  const int RED = 11; // colour of red ring
+  const int WRONG_RING_COLOUR = RED; // CHANGE THIS WHEN SWITCHING TEAMS (Should be the opponent's colour)
+  int this_colour;
 
-    pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
+  // INTAKE CONTROL LOOP
+
+  while (true) {
+    
+    // Driver control
+    if (master.get_digital(DIGITAL_R2)) {
+      intake.move(127); // intake
+      
+      // COLOUR SORT -- Slow down intake if it is the wrong colour to prevent scoring
+      this_colour = optical.get_hue();
+      if (this_colour < (WRONG_RING_COLOUR + 20) && this_colour > (WRONG_RING_COLOUR - 20)) {
+        intake.move(40);
+      }
+    }
+    else if (master.get_digital(DIGITAL_L2)){
+      intake.move(-100); // outtake
+    }
+    else {
+      intake.move(0);
+    }
+
+    // INTAKE - Set up the ring so that it can be grabbed by the arm on the conveyor belt
+    const int RING_IN_RANGE = 200; // The value of the optical sensor when the ring in the correct set up
+    if (master.get_digital(DIGITAL_A)) {
+      if (optical.get_proximity() < RING_IN_RANGE) { // Check if the ring is in the range
+        intake.move(90); 
+      }
+      else {
+        intake.move(0);
+      }
+    } 
+
+    pros::delay(50);
+  }
+}
+
+void scoreSensing () {
+  // Shake the controller to warn the driver when they can score onto the wall stake
+  const double scoringRange = 20; // Distance from the wall that the robot has to be to score on wall stake, in cm
+  bool sensingActivated = false; // Toggle whether the distance is to be detected
+
+  while (true) {
+    if (sensingActivated) {
+      double distance = wallMechSensor.get_value();
+      if (scoringRange + 3 > distance && distance > scoringRange - 3) { // Check if the robot is within +/- 3cm of the range
+        master.rumble(".-.-");
+      }
+    }
+    
+    // Toggle 
+    if (master.get_digital_new_press(DIGITAL_DOWN)) {
+      sensingActivated = !sensingActivated;
+    }
+
+    pros::delay(100);
   }
 }

@@ -17,9 +17,9 @@ const int ARM_SPEED = 110;
 // Constants
 ///
 void default_constants() {
-  chassis.pid_heading_constants_set(11, 0, 20);
-  chassis.pid_drive_constants_set(20, 0, 100);
-  chassis.pid_turn_constants_set(3, 0.05, 20, 15);
+  chassis.pid_heading_constants_set(3, 0, 20);
+  chassis.pid_drive_constants_set(18, 0.12, 52.75);
+  chassis.pid_turn_constants_set(2.9, 0, 11.5, 15);
   chassis.pid_swing_constants_set(6, 0, 65);
 
   chassis.pid_turn_exit_condition_set(80_ms, 3_deg, 250_ms, 7_deg, 500_ms, 500_ms);
@@ -36,6 +36,113 @@ void default_constants() {
 ///
 // Drive Example
 ///
+
+void SeaquamAutoRight () {
+   // ~~ Turn and move backwards towards the nearest mobile goal ~~
+  MogoClamp.retract();
+  chassis.pid_drive_set(-27_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(-30_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-4.2_in, 80);
+  chassis.pid_wait();
+
+  // ~~ Clamp onto the goal ~~
+  MogoClamp.extend();
+  pros::delay(200);
+  chassis.pid_drive_set(3_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(-3.5_in, DRIVE_SPEED);
+
+  // ~~ Three-point turn into the next ring ~~
+  chassis.pid_drive_set(-12_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(-50_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(30_in, DRIVE_SPEED);
+  chassis.pid_wait_until(15_in);
+  chassis.pid_speed_max_set(60);
+  intake.move(127);
+  chassis.pid_wait();
+  pros::delay(3000);
+
+  // ~~ Turn and touch the ladder ~~
+  chassis.pid_drive_set(-24_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(175_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(35_in, 60);
+  chassis.pid_wait();
+
+}
+
+void SeaquamAutoLeft () {
+   // ~~ Turn and move backwards towards the nearest mobile goal ~~
+  MogoClamp.retract();
+  chassis.pid_drive_set(-27_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(30_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-4.2_in, 80);
+  chassis.pid_wait();
+
+  // ~~ Clamp onto the goal ~~
+  MogoClamp.extend();
+  pros::delay(200);
+  chassis.pid_drive_set(3_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(-3.5_in, DRIVE_SPEED);
+
+  // ~~ Three-point turn into the next ring ~~
+  chassis.pid_drive_set(-12_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(50_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(30_in, DRIVE_SPEED);
+  chassis.pid_wait_until(15_in);
+  chassis.pid_speed_max_set(60);
+  intake.move(127);
+  chassis.pid_wait();
+  pros::delay(3000);
+
+  // ~~ Turn and touch the ladder ~~
+  chassis.pid_drive_set(-24_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(-175_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(35_in, 60);
+  chassis.pid_wait();
+
+}
+
+void trial_skills_auto () {
+  // ~~ Move backwards towards the nearest mobile goal ~~
+  MogoClamp.retract();
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  MogoClamp.extend();
+  chassis.pid_drive_set(-2_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(-45_deg, TURN_SPEED);
+  intake.move(127);
+  chassis.pid_wait();
+  chassis.pid_drive_set(32_in, 80);
+  chassis.pid_wait();
+  chassis.pid_turn_relative_set(-93_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-48_in, 80);
+  chassis.pid_wait();
+  MogoClamp.retract();
+  chassis.pid_drive_set(24_in, 80);
+  chassis.pid_wait();
+
+}
+
+void drive_forward () {
+  chassis.pid_drive_set(24_in, DRIVE_SPEED, true);
+  chassis.pid_wait();
+}
+
 void drive_example() {
   // The first parameter is target inches
   // The second parameter is max speed the robot will drive at
@@ -231,13 +338,14 @@ void safeAWPLeft() { // right side for now
   //arm.move(127);
 
   // ~~ Turn and move backwards towards the nearest mobile goal ~~
-  //chassis.pid_turn_relative_set(xx_deg, speed);
-  //chassis.pid_wait();
-  //chassis.pid_drive_set(-xx_in, speed);
-  //chassis.pid_wait();
+  MogoClamp.retract();
+  chassis.pid_turn_relative_set(12_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-30_in, DRIVE_SPEED);
+  chassis.pid_wait();
 
   // ~~ Clamp onto the goal ~~
-  //MogoClamp.set_value(true);
+  MogoClamp.extend();
 
   // ~~ Turn and intake the ring on the right ~~
   //chassis.pid_turn_relative_set(xx_deg, speed);

@@ -11,6 +11,11 @@ void skillsAuto();
 
 
 // Example routines
+void SeaquamAutoRight ();
+void SeaquamAutoLeft ();
+void trial_skills_auto ();
+void drive_forward ();
+
 void drive_example();
 void turn_example();
 void drive_and_turn();
