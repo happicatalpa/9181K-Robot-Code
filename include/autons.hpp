@@ -11,10 +11,13 @@ void skillsAuto();
 
 
 // Example routines
+void HeritageAutoLeft ();
+void HeritageAutoRight();
 void SeaquamAutoRight ();
 void SeaquamAutoLeft ();
 void trial_skills_auto ();
 void drive_forward ();
+void riskyAWPLeft();
 
 void drive_example();
 void turn_example();
@@ -26,3 +29,8 @@ void combining_movements();
 void interfered_example();
 
 void default_constants();
+
+
+// Helper functions / Threads
+void unstuckIntake();
+void testIntakeTask();

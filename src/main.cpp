@@ -8,10 +8,10 @@
 // Chassis constructor
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {-8, -16, -9},     // Left Chassis Ports (negative port will reverse it!)
-    {5, 11, 20},  // Right Chassis Ports (negative port will reverse it!) back to front
+    {-19, -18, -8},     // Left Chassis Ports (negative port will reverse it!)
+    {3, 2, 1},  // Right Chassis Ports (negative port will reverse it!) back to front
 
-    19,      // IMU Port
+    15,      // IMU Port
     2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     450);   // Wheel RPM
 
@@ -21,6 +21,15 @@ ez::Drive chassis(
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
+
+// GLOBAL CONSTANTS
+const int BLUE = 190; // colour of blue ring
+const int RED = 11; // colour of red ring
+const int TEAM_COLOUR = RED; // CHANGE THIS WHEN SWITCHING TEAMS (Should be the opponent's colour)
+
+
+
 void initialize() {
 
   pros::delay(500);  // Stop the user from doing anything while legacy ports configure
@@ -38,12 +47,18 @@ void initialize() {
   // chassis.opcontrol_curve_buttons_right_set(pros::E_CONTROLLER_DIGITAL_Y, pros::E_CONTROLLER_DIGITAL_A);
 
   // Autonomous Selector using LLEMU
+
   ez::as::auton_selector.autons_add({
+      Auton("Skills Auto", skillsAuto),
+      Auton("Test the intake task", testIntakeTask),
+      Auton("Heritage Left Auto", HeritageAutoLeft),
+      Auton("Heritage Right Auto", HeritageAutoRight),
+      Auton("Risky AWP Left", riskyAWPLeft),
+      Auton("Drive forward.", drive_forward),
+      Auton("Example Drive\n\nDrive forward and come back.", drive_example),
       Auton("Right side match auto.", SeaquamAutoRight),
       Auton("Left side mathc auto.", SeaquamAutoRight),
       Auton("trial skills", trial_skills_auto),
-      Auton("Drive forward.", drive_forward),
-      Auton("Example Drive\n\nDrive forward and come back.", drive_example),
       Auton("Example Turn\n\nTurn 3 times.", turn_example),
       Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
       Auton("Drive and Turn\n\nSlow down during drive.", wait_until_change_speed),
@@ -53,7 +68,6 @@ void initialize() {
       Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
       Auton("AWP safe left side", safeAWPLeft),
       Auton("AWP risky right side", riskyAWPRight),
-      Auton("Skills Auto", skillsAuto),
 
   });
 
@@ -66,6 +80,9 @@ void initialize() {
   arm.tare_position();
   arm.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
 
+  // Initalize arm
+  arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+  arm.brake();
 }
 
 /**
@@ -108,6 +125,7 @@ void autonomous() {
   chassis.drive_sensor_reset();               // Reset drive sensors to 0
   chassis.drive_brake_set(MOTOR_BRAKE_HOLD);  // Set motors to hold.  This helps autonomous consistency
 
+
   ez::as::auton_selector.selected_auton_call();  // Calls selected auton from autonomous selector
 }
 
@@ -125,13 +143,14 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  
   // Start Subsystem Threads
   pros::Task armControlTask(armControl); 
   pros::Task mogoClampControlTask(clampControl);
   pros::Task intakeControlTask(intakeControl);
   pros::Task scoreSensingTask (scoreSensing);
 
-  
+
   // This is preference to what you like to drive on
   pros::motor_brake_mode_e_t driver_preference_brake = MOTOR_BRAKE_COAST;
   chassis.drive_brake_set(driver_preference_brake);
@@ -148,8 +167,23 @@ void opcontrol() {
         chassis.pid_tuner_toggle();
 
       // Trigger the selected autonomous routine
-      if (master.get_digital(DIGITAL_B) && master.get_digital(DIGITAL_DOWN)) {
+      if (master.get_digital(DIGITAL_LEFT) && master.get_digital(DIGITAL_DOWN)) {
+
+        // Pause driver control threads
+        armControlTask.suspend();
+        mogoClampControlTask.suspend();
+        intakeControlTask.suspend();
+        scoreSensingTask.suspend();
+
+        // Run autonomous
         autonomous();
+
+        // Resume driver control threads
+        armControlTask.resume();
+        mogoClampControlTask.resume();
+        intakeControlTask.resume();
+        scoreSensingTask.resume();
+
         chassis.drive_brake_set(driver_preference_brake);
       }
 
@@ -165,10 +199,19 @@ void opcontrol() {
 
 void armControl() {
   // Variables
-  double targetAngle = 170; // How much the actual arm should turn
-  double gearRatio = 5;
-
+  double targetAngle = 110; // How much the actual arm should turn
+  double gearRatio = 5; // 60:12 gear ratio
   double MAX_ANGLE = targetAngle * gearRatio;
+  double INIT_ANGLE = 35 * gearRatio;
+
+  // Start match with arm up
+  arm.move_absolute(INIT_ANGLE, 100);
+  while (!((arm.get_position() < INIT_ANGLE+15) && (arm.get_position() > INIT_ANGLE-15))) {
+    // Continue running this loop as long as the motor is not within +-5 units of its goal
+    pros::delay(2);
+  }
+  
+
 
   while (true) {
     double currentPosition = arm.get_position();
@@ -176,20 +219,24 @@ void armControl() {
     // Driver Control 
     if (master.get_digital(DIGITAL_L1)) { // move the arm forward when the button is pressed
       if (currentPosition < MAX_ANGLE) {
-        arm.move_absolute(MAX_ANGLE, 60*(MAX_ANGLE-currentPosition)); // Slow down the arm as it approaches the target angle
-        intake.move(100); 
+        arm.move_absolute(MAX_ANGLE, 70*(MAX_ANGLE-currentPosition)); // Slow down the arm as it approaches the target angle
       }
+
       else {
         arm.move_velocity(0);
       }
     }
     else if ((master.get_digital(DIGITAL_B))) {
-      if (currentPosition != 0) {
-        arm.move_absolute(0, -40);
+      arm.move_absolute(0, -70*currentPosition);
+      while (!((arm.get_position() < 5) && (arm.get_position() > -5))) {
+        // Continue running this loop as long as the motor is not within +-5 units of its goal
+        pros::delay(2);
       }
     }
     else {
-      arm.move_velocity(0);
+      if (currentPosition > INIT_ANGLE) {
+        arm.move_absolute(INIT_ANGLE, -80*currentPosition);
+      }
     }
 
     pros::delay(50);
@@ -197,95 +244,113 @@ void armControl() {
 }
 
 void clampControl() {
-  // Variables
-  bool autoClamp = false; // toggle the activation of automatic clamping
-  const double CLAMP_RANGE = 8; // Distance of sensor from mogo before clamping, in cm
-
-  //Control
+  // Control loop
   while (true) {
+
     if (master.get_digital_new_press(DIGITAL_R1)) {
         //switch the state of mogo clamp
         MogoClamp.toggle();
       }
-    else if (autoClamp && !MogoClamp.is_extended()) {
-      if (clampSensor.get_value() < CLAMP_RANGE) {
-        MogoClamp.extend();
-      }
-    }
-
-    if (master.get_digital(DIGITAL_X) && master.get_digital(DIGITAL_Y)) {
-      autoClamp = !autoClamp;
-    }
-    
 
     pros::delay(50);
   }
 
-  void intakeControl() {
-    
-  }
 }
-
+// refactor instake code
 void intakeControl () {
-  const int BLUE = 190; // colour of blue ring
-  const int RED = 11; // colour of red ring
-  const int WRONG_RING_COLOUR = RED; // CHANGE THIS WHEN SWITCHING TEAMS (Should be the opponent's colour)
-  int this_colour;
+  int INTAKE_SPEED = 112;
 
   // INTAKE CONTROL LOOP
-
   while (true) {
     
     // Driver control
     if (master.get_digital(DIGITAL_R2)) {
-      intake.move(127); // intake
+      // Set intake speed to max if the arm is in the lowest position
+      if (-5 < arm.get_position() && arm.get_position() < 5) {
+        intake.move(120);
+      }
+      else {
+        intake.move(INTAKE_SPEED); // in-take
+      }
       
       // COLOUR SORT -- Slow down intake if it is the wrong colour to prevent scoring
-      this_colour = optical.get_hue();
-      if (this_colour < (WRONG_RING_COLOUR + 20) && this_colour > (WRONG_RING_COLOUR - 20)) {
+      /*if (!isAllianceColour()) { 
         intake.move(40);
-      }
+      }*/
     }
     else if (master.get_digital(DIGITAL_L2)){
-      intake.move(-100); // outtake
+      intake.move(-100); // out-take
     }
     else {
       intake.move(0);
     }
 
-    // INTAKE - Set up the ring so that it can be grabbed by the arm on the conveyor belt
-    const int RING_IN_RANGE = 200; // The value of the optical sensor when the ring in the correct set up
-    if (master.get_digital(DIGITAL_A)) {
-      if (optical.get_proximity() < RING_IN_RANGE) { // Check if the ring is in the range
-        intake.move(90); 
-      }
-      else {
-        intake.move(0);
-      }
-    } 
-
     pros::delay(50);
   }
 }
 
+
+// Shake the controller to warn the driver when they can score onto the wall stake
 void scoreSensing () {
-  // Shake the controller to warn the driver when they can score onto the wall stake
-  const double scoringRange = 20; // Distance from the wall that the robot has to be to score on wall stake, in cm
-  bool sensingActivated = false; // Toggle whether the distance is to be detected
+  const double scoringRange = 15; // Distance from the wall that the robot has to be to score on wall stake, in cm
+  bool sensingActivated = false; // Toggle to activate distance sensing
 
   while (true) {
     if (sensingActivated) {
-      double distance = wallMechSensor.get_value();
+      double distance = wallMechSensor.get_value(); // get distance to the closest object in front of the robot, in cm
       if (scoringRange + 3 > distance && distance > scoringRange - 3) { // Check if the robot is within +/- 3cm of the range
-        master.rumble(".-.-");
+        master.rumble(".-.-"); // warn driver by shaking controller
       }
     }
     
-    // Toggle 
+    // Toggle distance sensig
     if (master.get_digital_new_press(DIGITAL_DOWN)) {
       sensingActivated = !sensingActivated;
     }
 
     pros::delay(100);
+  }
+}
+
+
+// Automatically close the mobile goal clamp if a mobile goal is in range
+void mogoSensing () {
+
+  while (true) {
+    // Check that the clamp is not already holding a mobile goal; close the clamp if the limit switch is triggered
+    if (!MogoClamp.is_extended() && clampLimitSwitch.get_new_press()) {
+        MogoClamp.extend();
+    }
+
+    pros::delay(50);
+  }
+
+}
+
+bool isAllianceColour() {
+  int this_colour;
+
+  this_colour = optical.get_hue();
+
+  // Check to see if current colour is +/- 20 the RGB value of team colour
+  if (this_colour < (TEAM_COLOUR + 10) && this_colour > (TEAM_COLOUR - 10)) { 
+      return true;
+  }
+  else {
+    return false;
+  }
+}
+
+bool checkIsColour(int thisColor, int range) {
+  int detectedColour;
+
+  detectedColour = optical.get_hue();
+
+  // Check to see if current colour is +/- 20 the RGB value of team colour
+  if (detectedColour < (thisColor + range) && detectedColour > (thisColor - range)) { 
+      return true;
+  }
+  else {
+    return false;
   }
 }

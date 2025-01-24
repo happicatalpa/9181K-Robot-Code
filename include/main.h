@@ -76,6 +76,13 @@ void initialize(void);
 void disabled(void);
 void competition_initialize(void);
 void opcontrol(void);
+void armControl(void);
+void clampControl(void);
+void intakeControl(void);
+void scoreSensing(void);
+void mogoSensing(void);
+bool isAllianceColour(void);
+bool checkIsColour(int, int);
 #ifdef __cplusplus
 }
 #endif

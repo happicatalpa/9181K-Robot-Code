@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "SeaquamOpener9181K",
+    "project_name": "9181KJanuary",
     "target": "v5",
     "templates": {
       "EZ-Template": {
@@ -421,8 +421,9 @@
       }
     },
     "upload_options": {
-      "description": "9181K code for seaquam opener tournament!!!",
-      "icon": "robot"
+      "description": "\\",
+      "icon": "clawbot",
+      "slot": 2
     },
     "use_early_access": false
   }
