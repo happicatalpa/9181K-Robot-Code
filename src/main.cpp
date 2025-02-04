@@ -8,10 +8,10 @@
 // Chassis constructor
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {-19, -18, -8},     // Left Chassis Ports (negative port will reverse it!)
-    {3, 2, 1},  // Right Chassis Ports (negative port will reverse it!) back to front
+    {-19, -17, -9},     // Left Chassis Ports (negative port will reverse it!)
+    {8, 7, 6},  // Right Chassis Ports (negative port will reverse it!) back to front
 
-    15,      // IMU Port
+    20,      // IMU Port
     2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     450);   // Wheel RPM
 
@@ -49,6 +49,9 @@ void initialize() {
   // Autonomous Selector using LLEMU
 
   ez::as::auton_selector.autons_add({
+      Auton("match auto left", safeAWPLeft),
+      Auton("match auto right", safeAWPRight),
+      
       Auton("Skills Auto", skillsAuto),
       Auton("Test the intake task", testIntakeTask),
       Auton("Heritage Left Auto", HeritageAutoLeft),
@@ -66,7 +69,6 @@ void initialize() {
       Auton("Motion Chaining\n\nDrive forward, turn, and come back, but blend everything together :D", motion_chaining),
       Auton("Combine all 3 movements", combining_movements),
       Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
-      Auton("AWP safe left side", safeAWPLeft),
       Auton("AWP risky right side", riskyAWPRight),
 
   });
@@ -83,6 +85,9 @@ void initialize() {
   // Initalize arm
   arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
   arm.brake();
+
+  // Initalize Optical
+  
 }
 
 /**
@@ -149,6 +154,7 @@ void opcontrol() {
   pros::Task mogoClampControlTask(clampControl);
   pros::Task intakeControlTask(intakeControl);
   pros::Task scoreSensingTask (scoreSensing);
+  pros::Task doinkerControlTask(doinkerControl);
 
 
   // This is preference to what you like to drive on
@@ -174,6 +180,7 @@ void opcontrol() {
         mogoClampControlTask.suspend();
         intakeControlTask.suspend();
         scoreSensingTask.suspend();
+        doinkerControlTask.suspend();
 
         // Run autonomous
         autonomous();
@@ -183,6 +190,7 @@ void opcontrol() {
         mogoClampControlTask.resume();
         intakeControlTask.resume();
         scoreSensingTask.resume();
+        doinkerControlTask.resume();
 
         chassis.drive_brake_set(driver_preference_brake);
       }
@@ -202,7 +210,7 @@ void armControl() {
   double targetAngle = 110; // How much the actual arm should turn
   double gearRatio = 5; // 60:12 gear ratio
   double MAX_ANGLE = targetAngle * gearRatio;
-  double INIT_ANGLE = 35 * gearRatio;
+  double INIT_ANGLE = 40 * gearRatio;
 
   // Start match with arm up
   arm.move_absolute(INIT_ANGLE, 100);
@@ -212,7 +220,7 @@ void armControl() {
   }
   
 
-
+ 
   while (true) {
     double currentPosition = arm.get_position();
 
@@ -228,9 +236,11 @@ void armControl() {
     }
     else if ((master.get_digital(DIGITAL_B))) {
       arm.move_absolute(0, -70*currentPosition);
-      while (!((arm.get_position() < 5) && (arm.get_position() > -5))) {
+      int timePassed = 0;
+      while ((!((arm.get_position() < 5) && (arm.get_position() > -5))) && timePassed < 3000) {
         // Continue running this loop as long as the motor is not within +-5 units of its goal
         pros::delay(2);
+        timePassed +=2;
       }
     }
     else {
@@ -284,6 +294,22 @@ void intakeControl () {
     else {
       intake.move(0);
     }
+
+    pros::delay(50);
+  }
+}
+
+
+void doinkerControl () {
+
+  // DOINKER CONTROL LOOP
+  while (true) {
+    
+    // Driver control
+    if (master.get_digital_new_press(DIGITAL_LEFT)) {
+      // Set intake speed to max if the arm is in the lowest position
+      doinker.toggle();
+      }
 
     pros::delay(50);
   }

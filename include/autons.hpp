@@ -5,6 +5,7 @@
 extern Drive chassis;
 
 // Autonomous routes
+void safeAWPRight();
 void safeAWPLeft();
 void riskyAWPRight();
 void skillsAuto();
@@ -34,3 +35,6 @@ void default_constants();
 // Helper functions / Threads
 void unstuckIntake();
 void testIntakeTask();
+void waitUntilRingIntaked();
+void colourSort();
+void waitUntilAllyRingIntaked();

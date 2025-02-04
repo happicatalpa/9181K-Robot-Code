@@ -396,6 +396,7 @@ class Optical : public Device {
 	 * }
 	 * \endcode
 	 */
+
 	virtual std::int32_t disable_gesture();
 
 	/**
