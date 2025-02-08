@@ -8,7 +8,7 @@
 // Chassis constructor
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {-19, -17, -9},     // Left Chassis Ports (negative port will reverse it!)
+    {-19, -15, -9},     // Left Chassis Ports (negative port will reverse it!)
     {8, 7, 6},  // Right Chassis Ports (negative port will reverse it!) back to front
 
     20,      // IMU Port
@@ -49,16 +49,21 @@ void initialize() {
   // Autonomous Selector using LLEMU
 
   ez::as::auton_selector.autons_add({
+      Auton("Skills Auto", skillsAuto),
+      Auton("AWP Right", AWPRight),
+      
+      Auton("Drive forward.", drive_forward),
+      Auton("Example Drive\n\nDrive forward and come back.", drive_example),
+      Auton("Example Turn\n\nTurn 3 times.", turn_example),
+
       Auton("match auto left", safeAWPLeft),
       Auton("match auto right", safeAWPRight),
       
-      Auton("Skills Auto", skillsAuto),
       Auton("Test the intake task", testIntakeTask),
       Auton("Heritage Left Auto", HeritageAutoLeft),
       Auton("Heritage Right Auto", HeritageAutoRight),
       Auton("Risky AWP Left", riskyAWPLeft),
-      Auton("Drive forward.", drive_forward),
-      Auton("Example Drive\n\nDrive forward and come back.", drive_example),
+      
       Auton("Right side match auto.", SeaquamAutoRight),
       Auton("Left side mathc auto.", SeaquamAutoRight),
       Auton("trial skills", trial_skills_auto),
@@ -306,7 +311,7 @@ void doinkerControl () {
   while (true) {
     
     // Driver control
-    if (master.get_digital_new_press(DIGITAL_LEFT)) {
+    if (master.get_digital_new_press(DIGITAL_A)) {
       // Set intake speed to max if the arm is in the lowest position
       doinker.toggle();
       }

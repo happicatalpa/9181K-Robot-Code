@@ -3,7 +3,7 @@
 #include "api.h"
 
 
-inline pros::MotorGroup intake ({11, -18}, pros::v5::MotorGears::blue);
+inline pros::MotorGroup intake ({16, -14}, pros::v5::MotorGears::blue);
 inline pros::Motor arm (5, pros::MotorGears::red, pros::v5::MotorEncoderUnits::degrees);
 inline pros::adi::Pneumatics MogoClamp ('H', false);
 inline pros::adi::Pneumatics doinker ('G', false);

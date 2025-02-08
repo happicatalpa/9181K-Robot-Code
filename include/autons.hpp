@@ -9,6 +9,7 @@ void safeAWPRight();
 void safeAWPLeft();
 void riskyAWPRight();
 void skillsAuto();
+void AWPRight();
 
 
 // Example routines
@@ -36,5 +37,6 @@ void default_constants();
 void unstuckIntake();
 void testIntakeTask();
 void waitUntilRingIntaked();
+void stopWhenRingIntaked();
 void colourSort();
 void waitUntilAllyRingIntaked();
