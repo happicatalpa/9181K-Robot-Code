@@ -50,14 +50,24 @@ void initialize() {
 
   ez::as::auton_selector.autons_add({
       Auton("Skills Auto", skillsAuto),
+      Auton("match auto right", safeAWPRight),
+      Auton("match auto left", safeAWPLeft),
+
+      Auton("AWP LEFT", AWPLeft),
       Auton("AWP Right", AWPRight),
+
+
+            Auton("match auto left", safeAWPLeft),
+     
+      Auton("Driver skills auto", driverSkillsAuto),
+      
+      
       
       Auton("Drive forward.", drive_forward),
       Auton("Example Drive\n\nDrive forward and come back.", drive_example),
       Auton("Example Turn\n\nTurn 3 times.", turn_example),
 
-      Auton("match auto left", safeAWPLeft),
-      Auton("match auto right", safeAWPRight),
+      
       
       Auton("Test the intake task", testIntakeTask),
       Auton("Heritage Left Auto", HeritageAutoLeft),
@@ -200,6 +210,7 @@ void opcontrol() {
         chassis.drive_brake_set(driver_preference_brake);
       }
 
+
       chassis.pid_tuner_iterate();  // Allow PID Tuner to iterate
     }
   
@@ -215,7 +226,7 @@ void armControl() {
   double targetAngle = 110; // How much the actual arm should turn
   double gearRatio = 5; // 60:12 gear ratio
   double MAX_ANGLE = targetAngle * gearRatio;
-  double INIT_ANGLE = 40 * gearRatio;
+  double INIT_ANGLE = 45 * gearRatio;
 
   // Start match with arm up
   arm.move_absolute(INIT_ANGLE, 100);
@@ -300,7 +311,7 @@ void intakeControl () {
       intake.move(0);
     }
 
-    pros::delay(50);
+    pros::delay(50); 
   }
 }
 
@@ -311,7 +322,7 @@ void doinkerControl () {
   while (true) {
     
     // Driver control
-    if (master.get_digital_new_press(DIGITAL_A)) {
+    if (master.get_digital_new_press(DIGITAL_X)) {
       // Set intake speed to max if the arm is in the lowest position
       doinker.toggle();
       }

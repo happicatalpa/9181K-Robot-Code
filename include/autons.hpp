@@ -10,6 +10,8 @@ void safeAWPLeft();
 void riskyAWPRight();
 void skillsAuto();
 void AWPRight();
+void AWPLeft();
+void driverSkillsAuto();
 
 
 // Example routines
