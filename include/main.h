@@ -83,7 +83,7 @@ void scoreSensing(void);
 void mogoSensing(void);
 bool isAllianceColour(void);
 bool checkIsColour(int, int);
-void doinkerControl();
+void PTOControl();
 #ifdef __cplusplus
 }
 #endif

@@ -8,10 +8,10 @@
 // Chassis constructor
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {-19, -15, -9},     // Left Chassis Ports (negative port will reverse it!)
-    {8, 7, 6},  // Right Chassis Ports (negative port will reverse it!) back to front
+    {-7, -6, -4},     // Left Chassis Ports (negative port will reverse it!)
+    {9, 8, 5},  // Right Chassis Ports (negative port will reverse it!) back to front
 
-    20,      // IMU Port
+    19,      // IMU Port
     2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     450);   // Wheel RPM
 
@@ -49,17 +49,23 @@ void initialize() {
   // Autonomous Selector using LLEMU
 
   ez::as::auton_selector.autons_add({
-      Auton("Skills Auto", skillsAuto),
-      Auton("match auto right", safeAWPRight),
-      Auton("match auto left", safeAWPLeft),
+    Auton("Skills Auto", skillsAuto),
 
-      Auton("AWP LEFT", AWPLeft),
-      Auton("AWP Right", AWPRight),
+    Auton("match auto right (red pos and blue neg)", safeAWPRight),
+    Auton("match auto left (blue pos and red neg)", safeAWPLeft),
+    
+    Auton("AWP LEFT", AWPLeft),
+    
+ 
+
+    Auton("Driver skills auto", driverSkillsAuto),
+    
+    Auton("AWP Right", AWPRight),
 
 
             Auton("match auto left", safeAWPLeft),
      
-      Auton("Driver skills auto", driverSkillsAuto),
+      
       
       
       
@@ -93,13 +99,6 @@ void initialize() {
   ez::as::initialize();
   master.rumble(".");
 
-  // Reset motor encoder position to zero for the wall stake arm
-  arm.tare_position();
-  arm.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
-
-  // Initalize arm
-  arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-  arm.brake();
 
   // Initalize Optical
   
@@ -165,11 +164,10 @@ void autonomous() {
 void opcontrol() {
   
   // Start Subsystem Threads
-  pros::Task armControlTask(armControl); 
   pros::Task mogoClampControlTask(clampControl);
   pros::Task intakeControlTask(intakeControl);
   pros::Task scoreSensingTask (scoreSensing);
-  pros::Task doinkerControlTask(doinkerControl);
+  pros::Task PTOControlTask(PTOControl);
 
 
   // This is preference to what you like to drive on
@@ -191,21 +189,19 @@ void opcontrol() {
       if (master.get_digital(DIGITAL_LEFT) && master.get_digital(DIGITAL_DOWN)) {
 
         // Pause driver control threads
-        armControlTask.suspend();
         mogoClampControlTask.suspend();
         intakeControlTask.suspend();
         scoreSensingTask.suspend();
-        doinkerControlTask.suspend();
+        PTOControlTask.suspend();
 
         // Run autonomous
         autonomous();
 
         // Resume driver control threads
-        armControlTask.resume();
         mogoClampControlTask.resume();
         intakeControlTask.resume();
         scoreSensingTask.resume();
-        doinkerControlTask.resume();
+        PTOControlTask.resume();
 
         chassis.drive_brake_set(driver_preference_brake);
       }
@@ -213,6 +209,8 @@ void opcontrol() {
 
       chassis.pid_tuner_iterate();  // Allow PID Tuner to iterate
     }
+
+
   
     chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade
    
@@ -316,19 +314,19 @@ void intakeControl () {
 }
 
 
-void doinkerControl () {
 
-  // DOINKER CONTROL LOOP
+void PTOControl() {
+  // Control loop
   while (true) {
-    
-    // Driver control
-    if (master.get_digital_new_press(DIGITAL_X)) {
-      // Set intake speed to max if the arm is in the lowest position
-      doinker.toggle();
+
+    if (master.get_digital_new_press(DIGITAL_UP)) {
+        //switch the state of mogo clamp
+        PTO.toggle();
       }
 
     pros::delay(50);
   }
+
 }
 
 

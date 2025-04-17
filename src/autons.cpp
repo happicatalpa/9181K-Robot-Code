@@ -7,10 +7,10 @@
 
 // Default speeds
 // These are out of 127
-const int DRIVE_SPEED = 105;
+int DRIVE_SPEED = 105;
 const int TURN_SPEED = 90;
 const int SWING_SPEED = 90;
-const int INTAKE_SPEED = 127;
+const int INTAKE_SPEED = 120;
 const int ARM_SPEED = 110;
 const int BLUE = 170; // colour of blue ring
 const int RED = 13; // colour of red ring
@@ -18,8 +18,8 @@ int intakeDelayTime = 750; // ms that the intake will go back for when trying to
 
 
 // CHANGE THIS BEFORE EACH MATCH
-const int ALLY_COLOUR = BLUE;
-const int ENEMY_COLOUR = RED;
+const int ALLY_COLOUR = RED;
+const int ENEMY_COLOUR = BLUE;
 
 ///
 // Constants
@@ -28,7 +28,7 @@ void default_constants() {
   chassis.pid_heading_constants_set(3, 0, 20);
   chassis.pid_drive_constants_forward_set(8.8, .005, 4.5);
   chassis.pid_drive_constants_backward_set(9.1, 0.025,1.75);
-  chassis.pid_turn_constants_set(2.1, 0.001, 10.25, 15);
+  chassis.pid_turn_constants_set(1.5, 0.003, 1.25, 10);
   chassis.pid_swing_constants_set(6, 0, 65);
 
   chassis.pid_turn_exit_condition_set(80_ms, 3_deg, 250_ms, 7_deg, 500_ms, 500_ms);
@@ -411,34 +411,34 @@ void interfered_example() {
 /* Autonomous Functions */ 
 
 void safeAWPRight() { // right side for now
-  // Initalize arm
-  // Variables
-  double gearRatio = 5; // 60:12 gear ratio
-  double INIT_ANGLE = 40 * gearRatio;
 
-  // Start match with arm up
-  arm.move_absolute(INIT_ANGLE, 100);
-  while (!((arm.get_position() < INIT_ANGLE+15) && (arm.get_position() > INIT_ANGLE-15))) {
-  // Continue running this loop as long as the motor is not within +-5 units of its goal
-  pros::delay(2);
-  }
+  // Release the intake
+  intake.move(INTAKE_SPEED);
+  pros::delay(200);
+  intake.move(0);
+
+    // Release the intake
+    intake.move(-INTAKE_SPEED);
+    pros::delay(75);
+    intake.move(0);
 
   // ~~ Move back towards the closest mogo ~~
-  chassis.pid_drive_set(-16.3_in, DRIVE_SPEED);
+  chassis.pid_drive_set(-14.3_in, DRIVE_SPEED);
   chassis.pid_wait_until(-10_in);
   chassis.pid_speed_max_set(80);
-  chassis.pid_wait_quick_chain();
-  chassis.pid_turn_relative_set(-36_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(-7_in, 60);
+  chassis.pid_turn_relative_set(-32_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-10_in, 60);
   chassis.pid_wait();
 
   // ~~ Clamp onto the goal ~~
   MogoClamp.extend();
 
     // Start intake and tasks
-  intake.move(INTAKE_SPEED);
   pros::delay(1000);
+  intake.move(INTAKE_SPEED);
+
   
 
   // ~~ Turn and intake the ring on the right ~~
@@ -448,28 +448,24 @@ void safeAWPRight() { // right side for now
   chassis.pid_wait_quick_chain();
   pros::Task intakeTask(unstuckIntake); 
   pros::Task colourSortTask(colourSort);
-  chassis.pid_drive_set(32_in, DRIVE_SPEED);
+  chassis.pid_drive_set(24.3_in, DRIVE_SPEED);
   chassis.pid_wait_until(18_in);
   chassis.pid_speed_max_set(60);
-  waitUntilAllyRingIntaked();
   pros::delay(500);
-  intake.move(0);
-  intakeTask.remove();
-  colourSortTask.remove();
 
 
 
   // Go touch the ladder?
-  /*
+  
   chassis.pid_turn_relative_set(197_deg, TURN_SPEED);
-  chassis.pid_drive_set(60_in, DRIVE_SPEED);
+  chassis.pid_drive_set(50_in, DRIVE_SPEED);
   chassis.pid_wait_until(28_in);
   intakeTask.remove();
   colourSortTask.remove();
   intake.move(0);
   chassis.pid_speed_max_set(60);
   chassis.pid_wait();
-*/
+
 /*
   // ~~ Turn and intake rings in the corner ~~
   chassis.pid_turn_relative_set(66_deg, TURN_SPEED);
@@ -493,34 +489,33 @@ void safeAWPRight() { // right side for now
 
 
 void safeAWPLeft() { // right side for now
-  // Initalize arm
-  // Variables
-  double gearRatio = 5; // 60:12 gear ratio
-  double INIT_ANGLE = 40 * gearRatio;
+  // Release the intake
+  intake.move(INTAKE_SPEED);
+  pros::delay(200);
+  intake.move(0);
 
-  // Start match with arm up
-  arm.move_absolute(INIT_ANGLE, 100);
-  while (!((arm.get_position() < INIT_ANGLE+15) && (arm.get_position() > INIT_ANGLE-15))) {
-  // Continue running this loop as long as the motor is not within +-5 units of its goal
-  pros::delay(2);
-  }
+    // Release the intake
+    intake.move(-INTAKE_SPEED);
+    pros::delay(75);
+    intake.move(0);
 
   // ~~ Move back towards the closest mogo ~~
-  chassis.pid_drive_set(-16.3_in, DRIVE_SPEED);
+  chassis.pid_drive_set(-15.3_in, DRIVE_SPEED);
   chassis.pid_wait_until(-10_in);
   chassis.pid_speed_max_set(80);
-  chassis.pid_wait_quick_chain();
-  chassis.pid_turn_relative_set(36_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(-7_in, 60);
+  chassis.pid_turn_relative_set(29_deg, TURN_SPEED);
+  chassis.pid_wait();
+  chassis.pid_drive_set(-10_in, 60);
   chassis.pid_wait();
 
   // ~~ Clamp onto the goal ~~
   MogoClamp.extend();
 
     // Start intake and tasks
-  intake.move(INTAKE_SPEED);
   pros::delay(1000);
+  intake.move(INTAKE_SPEED);
+
   
 
   // ~~ Turn and intake the ring on the right ~~
@@ -530,23 +525,24 @@ void safeAWPLeft() { // right side for now
   chassis.pid_wait_quick_chain();
   pros::Task intakeTask(unstuckIntake); 
   pros::Task colourSortTask(colourSort);
-  chassis.pid_drive_set(32_in, DRIVE_SPEED);
+  chassis.pid_drive_set(24.3_in, DRIVE_SPEED);
   chassis.pid_wait_until(18_in);
   chassis.pid_speed_max_set(60);
-  waitUntilAllyRingIntaked();
   pros::delay(500);
-  intake.move(0);
-/*
+
+
+
   // Go touch the ladder?
+  
   chassis.pid_turn_relative_set(-197_deg, TURN_SPEED);
-  chassis.pid_drive_set(60_in, DRIVE_SPEED);
+  chassis.pid_drive_set(50_in, DRIVE_SPEED);
   chassis.pid_wait_until(28_in);
   intakeTask.remove();
   colourSortTask.remove();
   intake.move(0);
   chassis.pid_speed_max_set(60);
   chassis.pid_wait();
-*/
+
 
 /*
   // ~~ Turn and intake rings in the corner ~~
@@ -778,7 +774,7 @@ void AWPRight() {
   // Go to the ladder
   chassis.pid_wait();
   chassis.pid_drive_set(65_in, DRIVE_SPEED);
-  chassis.pid_wait_until(35_in);
+  chassis.pid_wait_until(35_in); 
   chassis.pid_speed_max_set(30);
   chassis.pid_wait();
 
@@ -793,7 +789,7 @@ void AWPLeft() {
   chassis.pid_wait();
   chassis.pid_turn_relative_set(90_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(2.3_in, 50);
+  chassis.pid_drive_set(2.1_in, 50);
   chassis.pid_wait();
 
   // ~ SCORE WALL STAKE ~
@@ -828,8 +824,8 @@ void AWPLeft() {
   }
 
   // ~ GET THE MOGO ~
-  //chassis.pid_drive_set(-4_in, DRIVE_SPEED);
-  //chassis.pid_wait();
+  chassis.pid_drive_set(-4_in, DRIVE_SPEED);
+  chassis.pid_wait();
   chassis.pid_turn_relative_set(-37_deg, TURN_SPEED);
   chassis.pid_wait();
   chassis.pid_drive_set(-38_in, DRIVE_SPEED);
@@ -837,7 +833,7 @@ void AWPLeft() {
   chassis.pid_speed_max_set(50);
   chassis.pid_wait();
   MogoClamp.set_value(true);
-  pros::delay(1000);
+  pros::delay(50);
     // Start intake managing task
   intake.move(INTAKE_SPEED);
   pros::Task intakeTask(unstuckIntake); 
@@ -847,25 +843,25 @@ void AWPLeft() {
   chassis.pid_wait();
   chassis.pid_drive_set(28_in, DRIVE_SPEED);
   chassis.pid_wait();
-  pros::delay(500);
+  pros::delay(300);
 
   // Get Ring 2
   chassis.pid_turn_relative_set(105_deg, TURN_SPEED);
   chassis.pid_wait();
   chassis.pid_drive_set(13_in, 70);
-  chassis.pid_wait_until(4);
+  chassis.pid_wait_until(4_in);
   chassis.pid_speed_max_set(40);
   chassis.pid_wait();
-  pros::delay(1500);
+  pros::delay(500);
   chassis.pid_drive_set(-13_in, 70);
   chassis.pid_wait();
   chassis.pid_turn_relative_set(-23_deg, TURN_SPEED);
   chassis.pid_wait();
   chassis.pid_drive_set(13.5_in, 70);
-  chassis.pid_wait_until(4);
+  chassis.pid_wait_until(4_in);
   chassis.pid_speed_max_set(40);
   chassis.pid_wait();
-  pros::delay(2000);
+  pros::delay(500);
   chassis.pid_drive_set(-13.5_in, 70);
   chassis.pid_wait();
   chassis.pid_turn_relative_set(92_deg, TURN_SPEED);
@@ -894,6 +890,7 @@ void testIntakeTask() {
 
 
 void skillsAuto() {
+  /*
   // Initalize arm
   // Variables
   double targetAngle = 110; // How much the actual arm should turn
@@ -910,11 +907,25 @@ void skillsAuto() {
   pros::delay(2);
   }
 
-  // Start intake managing task
-  
+  */
 
+  // Release the intake
+  intake.move(INTAKE_SPEED);
+  pros::delay(200);
+  intake.move(0);
+
+  // Release the intake
+  intake.move(-INTAKE_SPEED);
+  pros::delay(75);
+  intake.move(0);
+
+
+  // Start intake managing task
+  pros::Task intakeTask(unstuckIntake); 
+
+  /*
   // ~~ Score Preload onto alliance stake ~~
-  /*arm.move_absolute(MAX_ANGLE, 70*(MAX_ANGLE-currentPosition)); // Slow down the arm as it approaches the target angle
+  arm.move_absolute(MAX_ANGLE, 70*(MAX_ANGLE-currentPosition)); // Slow down the arm as it approaches the target angle
   while (currentPosition < MAX_ANGLE-1) {
     currentPosition = arm.get_position();
     pros::delay(2);
@@ -925,30 +936,22 @@ void skillsAuto() {
   while (!((arm.get_position() < INIT_ANGLE+15) && (arm.get_position() > INIT_ANGLE-15))) {
   // Continue running this loop as long as the motor is not within +-5 units of its goal
   pros::delay(2);
-  } */
-
-  intake.move(INTAKE_SPEED);
-  pros::Task intakeTask(unstuckIntake); 
-  pros::delay(1500);
-
+  }
+*/
   // ~~ get the left mogo ~~
-  chassis.pid_drive_set(12_in, 70);
-  intakeTask.suspend();
-  intake.move(0);
+  chassis.pid_drive_set(-8_in, 70);
   chassis.pid_wait(); 
-  chassis.pid_turn_relative_set(90_deg, TURN_SPEED);
+  chassis.pid_turn_relative_set(-90_deg, TURN_SPEED);
   chassis.pid_wait_quick_chain();
-  chassis.pid_drive_set(-18.2_in, DRIVE_SPEED);
-  chassis.pid_wait_until(-7_in);
+  chassis.pid_drive_set(-23_in, DRIVE_SPEED);
+  chassis.pid_wait_until(-10_in);
   chassis.pid_speed_max_set(30);
-  chassis.pid_wait_until(-22_in);
-  MogoClamp.set_value(true);
   chassis.pid_wait();
-  pros::delay(10);
+  MogoClamp.set_value(true);
+  pros::delay(100);
 
   // ~~ collect 6 rings on the left ~~
   intake.move(INTAKE_SPEED);
-  intakeTask.resume();
   chassis.pid_turn_relative_set(-104_deg, TURN_SPEED);
   chassis.pid_wait();
   chassis.pid_drive_set(25_in, DRIVE_SPEED);
@@ -989,41 +992,41 @@ void skillsAuto() {
   chassis.pid_wait_quick_chain();
   chassis.pid_turn_relative_set(15_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(18_in, DRIVE_SPEED);
+  chassis.pid_drive_set(12_in, DRIVE_SPEED);
   chassis.pid_wait();
   // 5th, 6th Ring done
 
-  chassis.pid_drive_set(-12_in, DRIVE_SPEED);
+  chassis.pid_drive_set(-10_in, DRIVE_SPEED);
   chassis.pid_wait();
   chassis.pid_turn_relative_set(-136_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(-14_in, 95);
-  chassis.pid_wait();
   MogoClamp.set_value(false);
+  chassis.pid_drive_set(-15.3_in, 95);
+  chassis.pid_wait();
   //chassis.pid_drive_set(16_in, 80);
   //chassis.pid_wait();
   //chassis.pid_drive_set(-16_in, DRIVE_SPEED);
   //chassis.pid_wait();
-  chassis.pid_drive_set(15_in, 80);
+  chassis.pid_drive_set(16.3_in, 80);
   chassis.pid_wait();
   // Back into the corner and drop the mogo
 
   // ~~ Get the second mogo ~~
-  chassis.pid_turn_relative_set(-138_deg, TURN_SPEED);
+  chassis.pid_turn_relative_set(-142.5_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(32.5_in, DRIVE_SPEED);
-  chassis.pid_wait_until(20_in);
-  chassis.pid_speed_max_set(70);
-  chassis.pid_wait();
-  chassis.pid_drive_set(-85, 80);
-  chassis.pid_wait_until(-44_in);
+  //chassis.pid_drive_set(32.5_in, DRIVE_SPEED);
+  //chassis.pid_wait_until(20_in);
+  //chassis.pid_speed_max_set(70);
+  //chassis.pid_wait();
+  chassis.pid_drive_set(-68_in, 80);
+  chassis.pid_wait_until(-30_in);
   chassis.pid_speed_max_set(50);
   chassis.pid_wait();
   MogoClamp.set_value(true);
 
-  // ~~ collect 6 rings on the left ~~
+  // ~~ collect 6 rings on the right ~~
   intake.move(INTAKE_SPEED);
-  chassis.pid_turn_relative_set(89_deg, TURN_SPEED);
+  chassis.pid_turn_relative_set(96_deg, TURN_SPEED);
   chassis.pid_wait();
   chassis.pid_drive_set(25_in, DRIVE_SPEED);
   chassis.pid_wait_until(18_in);
@@ -1064,7 +1067,7 @@ void skillsAuto() {
   chassis.pid_turn_relative_set(-10_deg, TURN_SPEED);
   chassis.pid_wait();
   pros::delay(100);
-  chassis.pid_drive_set(18_in, DRIVE_SPEED);
+  chassis.pid_drive_set(14_in, DRIVE_SPEED);
   chassis.pid_wait();
   pros::delay(100);
   // 5th, 6th Ring done
@@ -1083,23 +1086,37 @@ void skillsAuto() {
   // Back into the corner and drop the mogo
 
   // ~~ Set up next side ~~
-  chassis.pid_turn_relative_set(50_deg, TURN_SPEED);
+  chassis.pid_turn_relative_set(49_deg, TURN_SPEED);
   chassis.pid_wait();
-  chassis.pid_drive_set(85_in, DRIVE_SPEED);
-  chassis.pid_wait_until(-50_in);
+  chassis.pid_drive_set(75_in, DRIVE_SPEED);
+  chassis.pid_wait();
+  pros::delay(420);
   intake.move(0);
   intakeTask.suspend();
-  chassis.pid_speed_max_set(70);
-  chassis.pid_wait();
+
+  // Push 3rd mogo in corner
+  chassis.pid_turn_relative_set(-53_deg, TURN_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(48_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_swing_relative_set(LEFT_SWING, 130, TURN_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(40_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();
 
   // Get the third empty mogo
-  chassis.pid_turn_relative_set(90_deg, TURN_SPEED);
-  chassis.pid_wait();
-  chassis.pid_drive_set(-54_in, DRIVE_SPEED);
-  chassis.pid_wait_until(-30_in);
-  chassis.pid_speed_max_set(60);
-  chassis.pid_wait();
-  MogoClamp.set_value(true);
+  chassis.pid_turn_relative_set(-30_deg, TURN_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(-10_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_turn_relative_set(50_deg, TURN_SPEED);
+  chassis.pid_wait_quick_chain();
+  chassis.pid_drive_set(-200_in, DRIVE_SPEED);
+  chassis.pid_wait_quick_chain();
+  //chassis.pid_wait_until(-30_in);
+  //chassis.pid_speed_max_set(60);
+  //chassis.pid_wait();
+  //MogoClamp.set_value(true);
   pros::delay(400);
 
   intake.move(INTAKE_SPEED);
